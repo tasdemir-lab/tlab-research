@@ -1,0 +1,12 @@
+{
+  "name": "tlab",
+  "version": "1.0.0",
+  "description": "Agentic research workflow for academic economics projects",
+  "author": {
+    "name": "Murat Tasdemir",
+    "url": "https://github.com/murattasdemir"
+  },
+  "repository": "https://github.com/murattasdemir/tlab-research",
+  "license": "MIT",
+  "keywords": ["research", "economics", "academic", "latex", "quarto"]
+}

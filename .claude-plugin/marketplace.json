@@ -1,0 +1,16 @@
+{
+  "name": "tlab-research",
+  "owner": {
+    "name": "Murat Tasdemir",
+    "url": "https://github.com/murattasdemir"
+  },
+  "plugins": [
+    {
+      "name": "tlab",
+      "description": "Agentic research workflow for academic economics projects",
+      "source": "./",
+      "version": "1.0.0",
+      "category": "development"
+    }
+  ]
+}
