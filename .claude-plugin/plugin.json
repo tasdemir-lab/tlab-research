@@ -4,9 +4,9 @@
   "description": "Agentic research workflow for academic economics projects",
   "author": {
     "name": "Murat Tasdemir",
-    "url": "https://github.com/murattasdemir"
+    "url": "https://github.com/tasdemir-lab"
   },
-  "repository": "https://github.com/murattasdemir/tlab-research",
+  "repository": "https://github.com/tasdemir-lab/tlab-research",
   "license": "MIT",
   "keywords": ["research", "economics", "academic", "latex", "quarto"]
 }

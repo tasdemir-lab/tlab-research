@@ -52,7 +52,7 @@ Focus: `CLAUDE.md`, `README.md`
 Focus: `.claude/settings.json`, `.claude/rules/_plugin_*.md`
 - No hardcoded absolute paths in any infrastructure files
 - `settings.json` is valid JSON with sensible permissions
-- `settings.json` contains `extraKnownMarketplaces` pointing to `murattasdemir/tlab-research`
+- `settings.json` contains `extraKnownMarketplaces` pointing to `tasdemir-lab/tlab-research`
 - Synced rules (`.claude/rules/_plugin_*.md`) have valid content (not corrupted copies)
 - No stale references to removed skills, agents, or rules
 

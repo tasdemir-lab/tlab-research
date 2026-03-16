@@ -15,7 +15,7 @@ A Claude Code plugin providing agentic research workflows for academic economics
 
 ```bash
 # Add the marketplace
-claude plugin marketplace add murattasdemir/tlab-research
+claude plugin marketplace add tasdemir-lab/tlab-research
 
 # Install the plugin (project scope)
 claude plugin install tlab@tlab-research --scope project
@@ -56,7 +56,7 @@ Updated rules will be synced on the next session start.
 
 ## Template Companion
 
-This plugin is designed to work with [research-template-bare](https://github.com/murattasdemir/research-template-bare), a scaffolding template for economics research projects. The template provides folder structure; this plugin provides the agentic workflow.
+This plugin is designed to work with [research-template-bare](https://github.com/tasdemir-lab/research-template-bare), a scaffolding template for economics research projects. The template provides folder structure; this plugin provides the agentic workflow.
 
 ## License
 
