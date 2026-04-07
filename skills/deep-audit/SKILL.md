@@ -77,6 +77,15 @@ Focus: `README.md`, `CLAUDE.md`, `code/`, `paper/`, `.gitignore`
 - Render convention described matches `code/_quarto.yml` settings (if exists)
 - `setup_project.sh` (if exists) creates the directories described in README
 
+#### Agent 5: Skill-vs-Prose Consistency
+Focus: All skill files (plugin `skills/*/SKILL.md` AND user-level `~/.claude/skills/*/SKILL.md`), global `~/.claude/CLAUDE.md`, project `CLAUDE.md`, `.claude/rules/*.md`
+- Extract explicit preferences from CLAUDE.md files (git merge strategy, commit style, build commands, code style, "always/never" instructions)
+- For each preference, grep skill files for contradicting executable commands or flags
+- Check plugin skills too — note contradictions even if the file can't be edited directly
+- Flag cases where a skill's literal shell command overrides a prose preference (e.g., CLAUDE.md says "squash merge" but a skill uses `--merge`)
+- Check for hardcoded absolute paths in skill files (`/Users/`, `/home/`)
+- Report each inconsistency with: source files, preference text, override text, runtime impact, and fix recommendation
+
 ### PHASE 2: Triage Findings
 
 Categorize each finding:
