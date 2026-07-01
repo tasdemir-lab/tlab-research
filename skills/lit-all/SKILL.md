@@ -1,6 +1,6 @@
 ---
 name: lit-all
-description: Comprehensive parallel literature sweep across all available academic databases (RePEc, CrossRef, Semantic Scholar, Google Scholar, arXiv, PubMed, Scholar Gateway) plus local Zotero library using concurrent agents. Supports iterative gap-filling, depth auto-detection, incremental expansion, source diversity tracking, and Zotero integration for surfacing papers you already own. Returns a deduplicated, thematically organized review.
+description: Comprehensive parallel literature sweep across all available academic databases (OpenAlex, CrossRef, Semantic Scholar, Google Scholar, arXiv, PubMed, Scholar Gateway) plus local Zotero library using concurrent agents. Supports iterative gap-filling, depth auto-detection, incremental expansion, source diversity tracking, and Zotero integration for surfacing papers you already own. Returns a deduplicated, thematically organized review.
 author: Murat Tasdemir (tasdemir)
 version: 3.1.0
 tags:
@@ -9,7 +9,7 @@ tags:
   - economics
   - multi-agent
   - parallel-search
-allowed-tools: ["Agent", "Read", "Write", "Edit", "Glob", "Grep", "Bash", "AskUserQuestion", "ToolSearch", "mcp__paper_find_server__search_repec", "mcp__paper_find_server__search_crossref", "mcp__paper_find_server__search_semantic", "mcp__paper_find_server__search_google_scholar", "mcp__paper_find_server__search_arxiv", "mcp__paper_find_server__search_pubmed", "mcp__claude_ai_Scholar_Gateway__semanticSearch", "mcp__zotero__zotero_search_items", "mcp__zotero__zotero_semantic_search", "mcp__zotero__zotero_get_item_metadata", "mcp__zotero__zotero_get_item_fulltext", "mcp__zotero__zotero_get_item_children", "mcp__zotero__zotero_get_annotations"]
+allowed-tools: ["Agent", "Read", "Write", "Edit", "Glob", "Grep", "Bash", "AskUserQuestion", "ToolSearch", "mcp__paper_find_server__search_openalex", "mcp__paper_find_server__search_crossref", "mcp__paper_find_server__search_semantic", "mcp__paper_find_server__search_google_scholar", "mcp__paper_find_server__search_arxiv", "mcp__paper_find_server__search_pubmed", "mcp__claude_ai_Scholar_Gateway__semanticSearch", "mcp__zotero__zotero_search_items", "mcp__zotero__zotero_semantic_search", "mcp__zotero__zotero_get_item_metadata", "mcp__zotero__zotero_get_item_fulltext", "mcp__zotero__zotero_get_item_children", "mcp__zotero__zotero_get_annotations"]
 ---
 
 # Lit-All: Parallel Multi-Database Literature Sweep
@@ -40,7 +40,7 @@ gracefully — it skips unavailable sources rather than stopping.
 
 | Server | Tools provided | Install command |
 |--------|---------------|-----------------|
-| paper_find_server | RePEc, CrossRef, Semantic Scholar, Google Scholar, arXiv, PubMed | `claude mcp add paper_find_server -- npx -y paper-find-mcp@latest` |
+| paper_find_server | OpenAlex, CrossRef, Semantic Scholar, Google Scholar, arXiv, PubMed | Runs from the local fork with `search_openalex`; needs `OPENALEX_API_KEY` (free, non-expiring — openalex.org/settings/api) in the MCP env. |
 | Zotero | Local library search, semantic search, metadata | `claude mcp add zotero -- npx -y zotero-mcp@latest` |
 | Scholar Gateway | Semantic academic search | Provided by Claude.ai (authenticate via `/mcp`) |
 
@@ -131,7 +131,7 @@ For each paper, return:
 - abstract: string (first 200 chars) or "N/A" if unavailable
 - doi: string or null
 - citation_count: integer or null
-- source_db: string (database name: "RePEc", "CrossRef", "Semantic Scholar", "Google Scholar", "Scholar Gateway", "arXiv", "PubMed", "Zotero (local)")
+- source_db: string (database name: "OpenAlex", "CrossRef", "Semantic Scholar", "Google Scholar", "Scholar Gateway", "arXiv", "PubMed", "Zotero (local)")
 - url: string (link to paper)
 ```
 
@@ -214,8 +214,8 @@ Formulate search queries:
 
 Before launching agents, verify that required MCP tools are available. Use ToolSearch to attempt loading each tool group:
 
-1. **paper_find_server** tools (RePEc, CrossRef, Semantic Scholar, Google Scholar, arXiv, PubMed):
-   - Run `ToolSearch("select:mcp__paper_find_server__search_repec")`
+1. **paper_find_server** tools (OpenAlex, CrossRef, Semantic Scholar, Google Scholar, arXiv, PubMed):
+   - Run `ToolSearch("select:mcp__paper_find_server__search_openalex")`
    - If tools load → proceed
    - If tools fail → **WARN**: "paper_find_server MCP is not connected. Agent Groups A, B, and E will be skipped. Only Scholar Gateway and Zotero will be searched."
 
@@ -245,7 +245,7 @@ Each agent is a `general-purpose` subagent with access to the MCP paper search t
 **Every agent prompt MUST end with:**
 > "Return results conforming to this schema for each paper: title, authors, year, abstract (first 200 chars or 'N/A'), doi (or null), citation_count (or null), source_db, url. If a database returns 0 results, report: '{database_name}: 0 results (query: {query used})'. Do not deduplicate — return all raw results tagged with source_db."
 
-#### Agent Group A: Economics Core (RePEc + CrossRef)
+#### Agent Group A: Economics Core (OpenAlex + CrossRef)
 
 Launched for focus: `economics`, `broad`, `all`
 
@@ -254,13 +254,13 @@ Launched for focus: `economics`, `broad`, `all`
 
 Search for papers on [TOPIC] using these two databases:
 
-1. Use mcp__paper_find_server__search_repec with:
+1. Use mcp__paper_find_server__search_openalex with:
    - query: [primary query]
-   - sort_by: "relevant_cited"
-   - series: try relevant series if applicable (e.g., "nber", "aer" for econ topics)
-   - year_from / year_to: [if year range specified, pass as integers]
+   - year: [if year range specified, as a string, e.g. "2015-2025" or "2020-"]
    - max_results: [max_per_db]
-   Then run a second search with [variant query] and sort_by: "newest".
+   Then run a second search with [variant query] (same year filter).
+   (OpenAlex covers economics working papers — NBER, IZA, Federal Reserve,
+   CEPR — plus published articles, with citation counts and OA PDF links.)
 
 2. Use mcp__paper_find_server__search_crossref with:
    - query: [primary query]
@@ -451,7 +451,7 @@ If `depth` is `deep`, run a third round:
 After all rounds complete (Round 1 only for `quick`; Rounds 1-2 for `standard`; Rounds 1-3 for `deep`), perform the final synthesis in the main conversation:
 
 1. **Deduplicate** across all agent groups and rounds:
-   - Primary key: DOI exact match (reliable for CrossRef, Semantic Scholar, PubMed; less reliable for RePEc, arXiv, Google Scholar)
+   - Primary key: DOI exact match (reliable for OpenAlex, CrossRef, Semantic Scholar, PubMed; less reliable for arXiv, Google Scholar)
    - Secondary key: Exact title match after lowercasing and stripping leading articles ("a", "an", "the") and trailing punctuation. Consider two papers the same if their normalized titles match exactly or one is a substring of the other.
    - When duplicates found, keep the entry with the most metadata (prefer the one with abstract, citations, and DOI)
    - Tag each paper with ALL databases where it appeared (indicates importance)
@@ -565,7 +565,7 @@ mindmap
 ### Seminal Works (Tier 1)
 | # | Paper | Year | Citations | Found In |
 |---|-------|------|-----------|----------|
-| 1 | Author(s). "Title." *Journal*. | YYYY | N | RePEc, CrossRef, Semantic Scholar |
+| 1 | Author(s). "Title." *Journal*. | YYYY | N | OpenAlex, CrossRef, Semantic Scholar |
 | 2 | ... | ... | ... | ... |
 
 ### Important Works (Tier 2)
@@ -664,7 +664,7 @@ Papers found in Zotero or local `.bib` files that are relevant to this topic:
 ## Full Results by Database
 
 <details>
-<summary>RePEc ([N] papers)</summary>
+<summary>OpenAlex ([N] papers)</summary>
 
 | # | Title | Authors | Year | DOI |
 |---|-------|---------|------|-----|
@@ -727,7 +727,7 @@ For each paper, generate a BibTeX entry following this pattern:
   doi       = {10.xxxx/xxxxx},
   url       = {https://...},
   abstract  = {First 200 characters of abstract...},
-  note      = {Found in: RePEc, CrossRef, Semantic Scholar}
+  note      = {Found in: OpenAlex, CrossRef, Semantic Scholar}
 }
 ```
 
@@ -790,7 +790,7 @@ Assess whether findings are one-sided:
 
 | Focus | Agent Groups Launched | Databases Used | Best For |
 |-------|----------------------|---------------|----------|
-| `economics` (default) | A, B, C, D, Z* | RePEc, CrossRef, Semantic Scholar, Google Scholar, Scholar Gateway, arXiv, Zotero* | Economics research |
+| `economics` (default) | A, B, C, D, Z* | OpenAlex, CrossRef, Semantic Scholar, Google Scholar, Scholar Gateway, arXiv, Zotero* | Economics research |
 | `broad` | A, B, C, D, Z* | Same as economics | Any social science or interdisciplinary topic |
 | `biomedical` | B, C, E, Z* | Semantic Scholar, Google Scholar, Scholar Gateway, PubMed, Zotero* | Health economics, epidemiology |
 | `all` | A, B, C, D, E, Z* | All databases + Zotero* | Maximum coverage across all fields |
@@ -825,7 +825,7 @@ All agents should be launched as `general-purpose` subagent type. Each agent pro
 - **Google Scholar rate limits**: Keep `max_per_db` at 10 or below for Google Scholar to avoid blocks.
 - **Deduplication is best-effort**: Papers without DOIs may appear as duplicates. The "Found In" column helps users spot these.
 - **Citation counts vary across databases**: CrossRef and Semantic Scholar may report different counts for the same paper. The skill uses the highest reported count.
-- **Non-English papers**: Some databases (especially RePEc, CrossRef, Google Scholar) index non-English papers. These are included in results without language filtering. Note the language in the output if identifiable.
+- **Non-English papers**: Some databases (especially OpenAlex, CrossRef, Google Scholar) index non-English papers. These are included in results without language filtering. Note the language in the output if identifiable.
 - **Source diversity metrics are inferred**: Geographic scope and methodology are inferred from titles/abstracts, not from full-text analysis. They are approximate.
 - **Gap-filling is not exhaustive**: Even `deep` mode (3 rounds) cannot guarantee complete coverage. It substantially improves recall over a single sweep but some gaps may persist.
 - **Zotero MCP is optional**: If the zotero-mcp server is not installed or not running, all Zotero features are silently skipped. Install with `claude mcp add zotero -- npx -y zotero-mcp@latest`.
@@ -858,7 +858,7 @@ This creates a natural workflow:
 | Some databases return 0 | Normal — not every database covers every topic. Check output header for which returned 0. |
 | Google Scholar rate-limited | Reduce `max_per_db` to 5 for Google Scholar |
 | Too many results to synthesize | Use year filters to narrow scope, or use `quick` depth |
-| Missing abstracts | Normal for Google Scholar (snippets only) and some RePEc entries. Cross-reference with Semantic Scholar. |
+| Missing abstracts | Normal for Google Scholar (snippets only) and some OpenAlex entries. Cross-reference with Semantic Scholar. |
 | Duplicate papers across databases | Expected — duplicates indicate paper is well-known. Dedup keeps the richest metadata entry. |
 | Scholar Gateway returns passages not papers | Expected — this tool returns relevant text chunks with citations, not paper-level results |
 | MCP tools not loaded | Step 1b pre-flight check detects this and warns. Run `/mcp` to reconnect Scholar Gateway if needed. |
